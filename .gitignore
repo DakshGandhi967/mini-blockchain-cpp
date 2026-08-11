@@ -2,3 +2,5 @@
 *.o
 *.out
 .vscode/
+input.txt
+output.txt
