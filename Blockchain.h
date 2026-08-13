@@ -1,5 +1,5 @@
 #pragma once
-
+#include "Transaction.h"
 #include <vector>
 #include <iostream>
 #include "Block.h"
@@ -9,9 +9,12 @@ using namespace std;
 class Blockchain{
     private:
         vector<Block> chain;
+        vector<Transaction> pendingTransactions;
 
         Block createGenesisBlock(){
-            return Block(0,"Genesis Block Data","0");
+            vector<Transaction> genesisTxs;
+            genesisTxs.push_back(Transaction("System", "Genesis", 0.0));
+            return Block(0,genesisTxs,"0");
         }
 
     public: 
@@ -23,13 +26,39 @@ class Blockchain{
             return chain.back();
         }
 
-        void addBlock(string data){
-            int nextIndex=chain.size();
-            string prevHash=getLatestBlock().hash;
+        void createTransaction(Transaction tx) {
+        pendingTransactions.push_back(tx);
+    }
 
-            Block newBlock(nextIndex,data,prevHash);
+        void minePendingTransactions(string minerAddress){
+            int nextIndex=chain.size();
+
+            string prevHash=getLatestBlock().hash;
+            Block newBlock(nextIndex,pendingTransactions,prevHash);
             chain.push_back(newBlock);
+
+            pendingTransactions.clear();
+            pendingTransactions.push_back(Transaction("System", minerAddress, 10.0));
         }
+
+        double getBalanceOfAddress(string address) const{
+            double balance=0.0;
+
+            for (const auto& block : chain) {
+            for (const auto& tx : block.transactions) {
+                if (tx.sender == address) {
+                    balance -= tx.amount; // Deduct if address spent money
+                }
+                if (tx.reciever == address) {
+                    balance += tx.amount; // Add if address received money
+                }
+            }
+        }
+        return balance;
+        }
+     
+
+
 
 
         bool isChainValid() const{
@@ -56,17 +85,19 @@ class Blockchain{
             return true;
         }
 
-        void printChain() const {
-        for (const auto& block : chain) {
+    void printChain() const {
+       for (const auto& block : chain) {
             std::cout << "----------------------------------------" << std::endl;
-            std::cout << "Index: " << block.index << std::endl;
-            std::cout << "Timestamp: " << block.timestamp << std::endl;
-            std::cout << "Data: " << block.data << std::endl;
-            std::cout << "Prev Hash: " << block.previousHash << std::endl;
-            std::cout << "Hash: " << block.hash << std::endl;
+            std::cout << "Block #" << block.index << " [Hash: " << block.hash.substr(0, 10) << "...]" << std::endl;
+            std::cout << "Prev Hash: " << block.previousHash.substr(0, 10) << "..." << std::endl;
+            std::cout << "Transactions:" << std::endl;
+            for (const auto& tx : block.transactions) {
+                tx.printTransaction();
+            }
         }
         std::cout << "----------------------------------------" << std::endl;
     }
+    
 
 
     // Expose direct reference to test tampering scenarios
