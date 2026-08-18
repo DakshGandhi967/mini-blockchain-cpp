@@ -10,15 +10,20 @@ class Blockchain{
     private:
         vector<Block> chain;
         vector<Transaction> pendingTransactions;
+        int difficulty;
+        double mining_reward;
 
         Block createGenesisBlock(){
             vector<Transaction> genesisTxs;
             genesisTxs.push_back(Transaction("System", "Genesis", 0.0));
-            return Block(0,genesisTxs,"0");
+
+            Block genesis(0,genesisTxs,"0");
+            genesis.mineBlock(difficulty);
+            return genesis;
         }
 
     public: 
-        Blockchain(){
+        Blockchain(int diff=3 , double reward=40) : difficulty(diff) , mining_reward(reward){
             chain.push_back(createGenesisBlock());
         }
 
@@ -28,17 +33,15 @@ class Blockchain{
 
         void createTransaction(Transaction tx) {
         pendingTransactions.push_back(tx);
-    }
+             }
 
         void minePendingTransactions(string minerAddress){
-            int nextIndex=chain.size();
+            Block newBlock(chain.size(),pendingTransactions,getLatestBlock().hash);
+            newBlock.mineBlock(difficulty);
 
-            string prevHash=getLatestBlock().hash;
-            Block newBlock(nextIndex,pendingTransactions,prevHash);
             chain.push_back(newBlock);
 
-            pendingTransactions.clear();
-            pendingTransactions.push_back(Transaction("System", minerAddress, 10.0));
+            pendingTransactions= {Transaction("SYSTEM",minerAddress,mining_reward)};
         }
 
         double getBalanceOfAddress(string address) const{
@@ -62,6 +65,8 @@ class Blockchain{
 
 
         bool isChainValid() const{
+
+            string target(difficulty,'0');
             for(size_t i=1 ;i<chain.size();++i){
 
                 const Block& currentBlock = chain[i];
@@ -79,6 +84,7 @@ class Blockchain{
                           << previousBlock.index << "'s hash!" << std::endl;
                 return false;
             }
+            if (currentBlock.hash.substr(0, difficulty) != target) return false;
 
 
             }

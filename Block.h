@@ -37,6 +37,19 @@ class Block{
 
     }
 
+    void mineBlock(int difficulty){
+        string targetPrefix(difficulty,'0');
+
+        while(hash.substr(0,difficulty)!=targetPrefix){
+            nonce++;
+            hash=calculateHash();
+        }
+
+
+        cout << "  -> Block #" << index << " Mined! Nonce: " << nonce 
+                  << " | Hash: " << hash << endl;
+    }
+
 
 
 };
