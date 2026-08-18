@@ -31,9 +31,30 @@ class Blockchain{
             return chain.back();
         }
 
-        void createTransaction(Transaction tx) {
+        bool createTransaction(const Transaction& tx){
+            if(tx.amount<=0){
+               cout << "[ERROR] Transaction amount must be positive.\n";
+                return false; 
+            }
+
+            if (tx.sender != "SYSTEM" && tx.sender != "System") {
+        double senderBalance = getBalanceOfAddress(tx.sender);
+        if (senderBalance < tx.amount) {
+            std::cout << "[ERROR] Insufficient balance for " << tx.sender 
+                      << " (Current Balance: " << senderBalance 
+                      << ", Requested: " << tx.amount << ")\n";
+            return false;
+        }
+    }       
+
         pendingTransactions.push_back(tx);
-             }
+
+        cout << "[SUCCESS] Transaction queued: " << tx.sender << " -> " 
+              << tx.reciever << " (" << tx.amount << " coins)\n";
+    return true;
+
+
+        }
 
         void minePendingTransactions(string minerAddress){
             Block newBlock(chain.size(),pendingTransactions,getLatestBlock().hash);
@@ -59,6 +80,8 @@ class Blockchain{
         }
         return balance;
         }
+
+
      
 
 
