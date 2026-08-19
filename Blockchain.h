@@ -57,12 +57,15 @@ class Blockchain{
         }
 
         void minePendingTransactions(string minerAddress){
+
+            pendingTransactions.push_back(Transaction("SYSTEM",minerAddress,mining_reward));
+
             Block newBlock(chain.size(),pendingTransactions,getLatestBlock().hash);
             newBlock.mineBlock(difficulty);
-
             chain.push_back(newBlock);
 
-            pendingTransactions= {Transaction("SYSTEM",minerAddress,mining_reward)};
+           pendingTransactions.clear();
+           
         }
 
         double getBalanceOfAddress(string address) const{
